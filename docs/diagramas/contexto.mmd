@@ -1,0 +1,25 @@
+C4Context
+  title SyncPass - Contexto del sistema
+
+  Person(coordinador, "Coordinador", "Administra usuarios, proyectos y eventos")
+  Person(monitor, "Monitor", "Consulta catálogo y dashboard")
+  Person(asistente, "Asistente", "Consulta catálogo y usa la app móvil")
+
+  System_Boundary(syncpass, "SyncPass") {
+    System(web, "Panel web SyncPass", "React + Vite")
+    System(api, "SyncPass API", "Spring Boot")
+    System(app, "App Android SyncPass", "Kotlin + Compose")
+  }
+
+  System_Ext(cognito, "AWS Cognito", "User pool opcional para identidad")
+  SystemDb_Ext(db, "Base de datos", "H2 en local; PostgreSQL en producción")
+
+  Rel(coordinador, web, "Usa", "HTTPS")
+  Rel(monitor, web, "Consulta", "HTTPS")
+  Rel(asistente, app, "Usa", "HTTPS")
+  Rel(web, api, "Consume", "JSON / Bearer JWT")
+  Rel(app, api, "Sincroniza y consulta", "JSON / Bearer JWT")
+  Rel(api, db, "Persiste", "JPA")
+  Rel(api, cognito, "Valida tokens y autentica", "OIDC / User Pools")
+
+  UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")

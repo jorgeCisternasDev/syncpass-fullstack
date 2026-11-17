@@ -1,0 +1,16 @@
+
+> syncpass-web@0.0.1 build
+> tsc --noEmit && vite build
+
+[36mvite v8.3.5 [32mbuilding client environment for production...[36m[39m
+transforming...
+Ô£ô 33 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.40 kB Ôöé gzip:  0.27 kB
+dist/assets/index-D2kK6zYG.css    2.93 kB Ôöé gzip:  1.15 kB
+dist/assets/index-DU30yJ20.js   247.89 kB Ôöé gzip: 76.31 kB
+
+[32mÔ£ô built in 124ms[39m
+
+EXIT CODE: 0

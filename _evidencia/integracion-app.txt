@@ -1,0 +1,187 @@
+﻿INTEGRACION APP ANDROID + API SYNCPASS - 2026-11-16 20:44 -03:00
+
+RESULTADO: OK. Login remoto, acreditacion, sincronizacion e idempotencia verificadas.
+
+=====================================================================
+1. ENTORNO
+=====================================================================
+API_PATH=C:\Users\jorge\Documents\II - Ingeniería en Informática\DFS - Desarrollo Full Stack II - DSY1104\proyecto\syncpass_api
+APP_PATH=C:\Users\jorge\Documents\II - Ingeniería en Informática\DAM - Desarrollo de Aplicaciones Móviles - DSY1105\SyncPass
+APP_PACKAGE=cl.duoc.syncpass
+LAN_IP=192.168.100.191
+API_PORT=8080
+API_PROFILE=local
+JWT_SECRET=definido por variable de entorno (integration-app-local-secret-32b)
+EMULADOR=Medium_Phone_API_37.0 (Android 37, x86_64)
+ADB=C:\Users\jorge\AppData\Local\Android\Sdk\platform-tools\adb.exe
+
+Comandos de arranque de la API:
+
+  $env:SPRING_PROFILES_ACTIVE="local"
+  $env:SERVER_PORT="8080"
+  $env:JWT_SECRET="integration-app-local-secret-32b"
+  .\gradlew.bat bootRun --console=plain
+
+Health:
+
+  GET http://192.168.100.191:8080/api/health
+  HTTP 200
+  {"data":{"service":"syncpass-api","status":"UP","authMode":"local",
+   "timestamp":"2026-11-16T23:42:19.480763100Z"},"message":"Servicio operativo",
+   "success":true,"timestamp":"2026-11-16T23:42:19.481786800Z"}
+
+=====================================================================
+2. CONFIGURACION DE LA APP (cambios minimos)
+=====================================================================
+Archivo: SyncPass/app/build.gradle.kts
+
+  // Valor anterior: http://192.168.1.89:8080/
+  buildConfigField("String", "API_BASE_URL", "\"http://192.168.100.191:8080/\"")
+  // Valor anterior: true
+  buildConfigField("boolean", "MODO_DEMO", "false")
+
+Archivo: SyncPass/app/src/main/res/xml/network_security_config.xml
+
+  Se agrego 192.168.100.191 a los dominios con cleartext HTTP permitido.
+  Sin este cambio el login fallaba con "No hay conexion con el servidor",
+  porque la configuracion solo permitia HTTP hacia 192.168.1.89 y 10.0.2.2.
+
+Compilacion e instalacion:
+
+  .\gradlew.bat :app:assembleDebug --console=plain
+  BUILD SUCCESSFUL
+
+  adb install -r app\build\outputs\apk\debug\app-debug.apk
+  Success
+
+  adb shell pm clear cl.duoc.syncpass
+  adb shell am start -n cl.duoc.syncpass/.MainActivity
+
+=====================================================================
+3. LOGIN EN LA APP
+=====================================================================
+Credenciales usadas en la pantalla de login:
+
+  monitor@syncpass.cl
+  Monitor.2026
+
+Resultado: sesion iniciada. La pantalla Home muestra "Hola, monitor" y el
+listado de proyectos descargado desde la API (Huerto comunitario saludable,
+Alfabetizacion digital para vecinos).
+
+Nota tecnica: TokenInterceptor solo lee SesionStore.accessTokenCache (memoria).
+Tras reiniciar el proceso de la app, la sesion persiste en DataStore pero el
+cache queda vacio y /api/sync/lote responde 401. Para esta prueba se cerro
+sesion y se volvio a iniciar sesion antes de cada sincronizacion, lo que
+repuebla el cache. Es un hallazgo de la app, no un bloqueo de la integracion.
+
+=====================================================================
+4. ACREDITACION
+=====================================================================
+Proyecto abierto: Alfabetizacion digital para vecinos
+Evento abierto: Taller 2: Tramites en linea sin miedo (eventoId=2)
+Codigo manual ingresado: SYNCPASS:ASISTENTE:4
+Participante: Participante Cuatro (ficticio, usuarioId=4)
+
+Mensaje de la app:
+  "acreditado, pero fuera del radio del recinto: queda para revision."
+
+La asistencia queda registrada como PRESENTE (validado=false por geocerca).
+Indicadores del evento antes de sincronizar: 1 presentes, 1 por sincronizar.
+Home: "1 registros sin subir".
+
+=====================================================================
+5. SINCRONIZACION
+=====================================================================
+Accion en la app: boton "Sincronizar" en Home.
+
+Mensaje de la app:
+  "1 registros sincronizados con el servidor."
+
+Evidencia de red en logcat (app):
+  11-16 23:43:53.585  I okhttp.OkHttpClient:
+  <-- 200 http://192.168.100.191:8080/api/sync/lote (32ms, unknown-length body)
+
+Dashboard de la API antes (integracion-before.json):
+
+  GET http://192.168.100.191:8080/api/dashboard/resumen
+  Authorization: Bearer <token monitor>
+  HTTP 200
+  {"data":{"usuarios":3,"eventos":2,"asistencias":0,"encuestas":0},
+   "message":"Resumen del sistema","success":true,
+   "timestamp":"2026-11-16T23:35:42.591894500Z"}
+
+Dashboard de la API despues del primer envio (integracion-after1.json):
+
+  HTTP 200
+  {"data":{"usuarios":3,"eventos":2,"asistencias":1,"encuestas":0},
+   "message":"Resumen del sistema","success":true,
+   "timestamp":"2026-11-16T23:43:01.088319200Z"}
+
+Filas: asistencias 0 -> 1. La asistencia quedo guardada en la API/H2.
+
+=====================================================================
+6. IDEMPOTENCIA (REENVIO DEL MISMO LOTE)
+=====================================================================
+Procedimiento:
+  1. force-stop de la app.
+  2. Se copio Room (syncpass.db) con adb run-as.
+  3. Se ejecuto: UPDATE asistencias SET sincronizado=0
+     WHERE eventoId=2 AND usuarioId=4;
+  4. Se reinyecto la base y se relanzo la app.
+  5. Logout/login para repoblar el cache del token.
+  6. Se pulso "Sincronizar" de nuevo con el mismo lote.
+
+Filas locales antes del reenvio (Room, tabla asistencias):
+  (eventoId=1, usuarioId=3, estado=PRESENTE, sincronizado=1)
+  (eventoId=2, usuarioId=4, estado=PRESENTE, sincronizado=1)
+  Tras el UPDATE: (2,4) queda con sincronizado=0 y 1 registro pendiente.
+
+Mensaje de la app en el reenvio:
+  "1 registros sincronizados con el servidor."
+
+Evidencia de red: POST http://192.168.100.191:8080/api/sync/lote -> HTTP 200.
+
+Dashboard de la API despues del reenvio (integracion-after2.json):
+
+  HTTP 200
+  {"data":{"usuarios":3,"eventos":2,"asistencias":1,"encuestas":0},
+   "message":"Resumen del sistema","success":true,
+   "timestamp":"2026-11-16T23:44:02.564683300Z"}
+
+Filas: asistencias 1 -> 1. El reenvio no duplico el registro.
+
+=====================================================================
+7. EVIDENCIA GRAFICA
+=====================================================================
+integracion-sync-ok.png
+  Captura del Home con el mensaje "1 registros sincronizados con el servidor."
+  tomada inmediatamente despues del primer envio.
+
+integracion-login.png
+  Captura previa del login. (El archivo se genero durante el diagnostico de
+  red; corresponde al intento anterior, no al login exitoso.)
+
+=====================================================================
+8. RESUMEN
+=====================================================================
+HEALTH=200 authMode=local
+API_LOGIN_MONITOR=200
+APP_LOGIN=OK (monitor@syncpass.cl / Monitor.2026)
+APP_ACREDITACION=OK (SYNCPASS:ASISTENTE:4, presente fuera de geocerca)
+APP_SYNC=OK (1 registro, HTTP 200 en /api/sync/lote)
+DASHBOARD_BEFORE_ASISTENCIAS=0
+DASHBOARD_AFTER1_ASISTENCIAS=1
+DASHBOARD_AFTER2_ASISTENCIAS=1 (idempotente, sin duplicados)
+
+Hallazgos:
+  - network_security_config.xml debia incluir la IP LAN 192.168.100.191;
+    se agrego.
+  - TokenInterceptor usa solo el cache en memoria; tras reiniciar el proceso
+    se requiere logout/login. No impide la integracion, pero conviene
+    corregirlo leyendo el token persistido.
+
+Cierre:
+  EMULADOR=cerrado (sin dispositivos en adb)
+  API=detenida (puerto 8080 libre)
+  GRADLE=daemons detenidos

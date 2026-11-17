@@ -1,0 +1,31 @@
+﻿> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources NO-SOURCE
+> Task :testClasses UP-TO-DATE
+gradlew.bat : OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap 
+classpath has been appended
+En línea: 1 Carácter: 356
++ ... n SilentlyContinue; & .\gradlew.bat test --console=plain 2>&1 | Out-F ...
++                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (OpenJDK 64-Bit ...s been appended:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-11-16T19:43:34.919-03:00  INFO 3712 --- [syncpass-api] [ionShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-11-16T19:43:34.923-03:00  INFO 3712 --- [syncpass-api] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-11-16T19:43:34.927-03:00  INFO 3712 --- [syncpass-api] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-11-16T19:43:34.929-03:00  INFO 3712 --- [syncpass-api] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-11-16T19:43:34.930-03:00  INFO 3712 --- [syncpass-api] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+> Task :test
+
+BUILD SUCCESSFUL in 8s
+4 actionable tasks: 1 executed, 3 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.2/userguide/configuration_cache_enabling.html
+
+EXIT CODE: 0
+
+TEST RESULT SUMMARY (build/test-results/test)
+cl.duoc.syncpass.sync.SyncControllerTest: tests=3 failures=0 errors=0 skipped=0
+cl.duoc.syncpass.sync.SyncSecurityIntegrationTest: tests=5 failures=0 errors=0 skipped=0
+TOTAL: tests=8 failures=0 errors=0 skipped=0

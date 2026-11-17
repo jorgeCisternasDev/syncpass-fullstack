@@ -1,0 +1,19 @@
+﻿SPRING_PROFILES_ACTIVE=postgres
+DATABASE_URL=jdbc:postgresql://127.0.0.1:65432/syncpass
+DATABASE_USER=syncpass_fake
+DDL_AUTO=none
+PROCESS_EXITED=True
+--- LOG MATCHES ---
+2026-11-16T19:51:43.633-03:00  INFO 15548 --- [syncpass-api] [           main] cl.duoc.syncpass.SyncPassApplication     : The following 1 profile is active: "postgres"
+2026-11-16T19:51:45.153-03:00  INFO 15548 --- [syncpass-api] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+org.hibernate.exception.JDBCConnectionException: Unable to obtain isolated JDBC connection [Connection to 127.0.0.1:65432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.] [n/a]
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:488) ~[HikariCP-7.0.2.jar:na]
+	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:576) ~[HikariCP-7.0.2.jar:na]
+	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:97) ~[HikariCP-7.0.2.jar:na]
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+2026-11-16T19:51:46.199-03:00 ERROR 15548 --- [syncpass-api] [           main] j.LocalContainerEntityManagerFactoryBean : Failed to initialize JPA EntityManagerFactory: Unable to create requested service [org.hibernate.engine.jdbc.env.spi.JdbcEnvironment] due to: Unable to determine Dialect without JDBC metadata (please set 'jakarta.persistence.jdbc.url' for common cases or 'hibernate.dialect' when a custom Dialect implementation must be provided)
+2026-11-16T19:51:46.199-03:00  WARN 15548 --- [syncpass-api] [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/hibernate/autoconfigure/HibernateJpaConfiguration.class]: Unable to create requested service [org.hibernate.engine.jdbc.env.spi.JdbcEnvironment] due to: Unable to determine Dialect without JDBC metadata (please set 'jakarta.persistence.jdbc.url' for common cases or 'hibernate.dialect' when a custom Dialect implementation must be provided)
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/hibernate/autoconfigure/HibernateJpaConfiguration.class]: Unable to create requested service [org.hibernate.engine.jdbc.env.spi.JdbcEnvironment] due to: Unable to determine Dialect without JDBC metadata (please set 'jakarta.persistence.jdbc.url' for common cases or 'hibernate.dialect' when a custom Dialect implementation must be provided)
+Caused by: org.hibernate.service.spi.ServiceException: Unable to create requested service [org.hibernate.engine.jdbc.env.spi.JdbcEnvironment] due to: Unable to determine Dialect without JDBC metadata (please set 'jakarta.persistence.jdbc.url' for common cases or 'hibernate.dialect' when a custom Dialect implementation must be provided)
+Caused by: org.hibernate.HibernateException: Unable to determine Dialect without JDBC metadata (please set 'jakarta.persistence.jdbc.url' for common cases or 'hibernate.dialect' when a custom Dialect implementation must be provided)

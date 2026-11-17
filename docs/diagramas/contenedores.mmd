@@ -1,0 +1,25 @@
+C4Container
+  title SyncPass - Contenedores
+
+  Person(coordinador, "Coordinador", "Administra el catálogo y usuarios")
+  Person(monitor, "Monitor", "Consulta información")
+  Person(asistente, "Asistente", "Usa la app móvil")
+
+  System_Boundary(syncpass, "SyncPass") {
+    Container(web, "Panel web", "React 19, TypeScript, Vite", "Login, dashboard, usuarios, proyectos y eventos")
+    Container(api, "API REST", "Java 21, Spring Boot 4.1", "Autenticación, autorización, catálogo y sync")
+    ContainerDb(db, "Base de datos", "H2 / PostgreSQL", "Usuarios, roles, proyectos, eventos, asistencias y encuestas")
+    Container(app, "App Android", "Kotlin, Compose, Room, Retrofit", "Cola offline y sincronización por lotes")
+  }
+
+  System_Ext(cognito, "AWS Cognito", "User pool opcional")
+
+  Rel(coordinador, web, "Usa", "HTTPS")
+  Rel(monitor, web, "Consulta", "HTTPS")
+  Rel(asistente, app, "Usa", "HTTPS")
+  Rel(web, api, "Llama endpoints", "JSON / Bearer JWT")
+  Rel(app, api, "Login, catálogo y /api/sync/lote", "JSON / Bearer JWT")
+  Rel(api, db, "Lee y escribe", "JPA / JDBC")
+  Rel(api, cognito, "Autentica y valida", "OIDC")
+
+  UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")

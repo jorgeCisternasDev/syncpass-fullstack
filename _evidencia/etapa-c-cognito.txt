@@ -1,0 +1,7 @@
+﻿SPRING_PROFILES_ACTIVE=cognito
+JWT_SECRET=set-from-environment
+COGNITO_ISSUER=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_fake
+AWS_COGNITO_USER_POOL_ID=us-east-1_fake
+AWS_REGION=us-east-1
+HEALTH_HTTP=200
+HEALTH_BODY={"data":{"service":"syncpass-api","status":"UP","authMode":"cognito","timestamp":"2026-11-16T23:02:47.891457900Z"},"message":"Servicio operativo","success":true,"timestamp":"2026-11-16T23:02:47.891457900Z"}

@@ -1,0 +1,201 @@
+PRUEBA EN EMULADOR - SYNCPASSMVP + API SYNCPASS
+Fecha: 2026-11-16/17 (hora local -03)
+App: cl.syncpass.app (SyncPassMVP)
+APK: C:\Users\jorge\AndroidStudioProjects\SyncPassMVP\app\build\outputs\apk\debug\app-debug.apk
+API: C:\Users\jorge\Documents\II - Ingeniería en Informática\DFS - Desarrollo Full Stack II - DSY1104\proyecto\syncpass_api
+Emulador: Medium_Phone_API_37.0 (headless)
+IP LAN: 192.168.100.191
+
+=====================================================================
+RESUMEN
+=====================================================================
+1. API 8080 perfil local: OK
+2. APK instalado: OK
+3. Login monitor@syncpass.cl / Monitor.2026: OK, rol Monitor desde JWT
+4. Acreditacion y pendiente en Ajustes: OK (1 pendiente)
+5. Sync y dashboard: OK (asistencias 0 -> 1)
+6. Reenvio idempotente: OK (asistencias 1 -> 1)
+7. Cierre/reapertura, sesion y sync sin login: OK
+8. API detenida y respaldo demo monitor / 1234: OK
+
+INCIDENTE DE MEMORIA (registrado, no omitido):
+Tras el primer sync, el host quedo con 0.67 GB libres. Al iniciar el paso 6,
+el proceso Java de la API (bootRun) desaparecio y el emulador tambien fue
+terminado por presion de memoria. La fila local quedo pendiente y el sync
+no se marco. Se recupero el entorno asi:
+  - API reiniciada con java -jar -Xmx384m (sin daemon de Gradle).
+  - Emulador reiniciado con -memory 1024 -no-window.
+  - Se repitio el sync contra la API nueva (0 -> 1).
+  - Se repitio el reenvio idempotente (1 -> 1).
+No se salto ningun paso; los pasos 5 y 6 se repitieron sobre la instancia
+recuperada y quedan con evidencia propia.
+
+=====================================================================
+COMANDOS PRINCIPALES
+=====================================================================
+API (primer arranque):
+  $env:SPRING_PROFILES_ACTIVE="local"
+  $env:SERVER_PORT="8080"
+  $env:JWT_SECRET="integration-mvp-local-secret-32b"
+  .\gradlew.bat bootRun --console=plain
+
+API (recuperacion, sin Gradle):
+  java -Xms128m -Xmx384m -jar build\libs\syncpass-api-0.0.1-SNAPSHOT.jar
+
+Health:
+  GET http://192.168.100.191:8080/api/health
+  HTTP 200
+  {"data":{"service":"syncpass-api","status":"UP","authMode":"local",...}}
+
+Login API:
+  POST http://192.168.100.191:8080/api/auth/login
+  {"email":"monitor@syncpass.cl","password":"Monitor.2026"}
+  HTTP 200
+  accessToken con payload:
+  {"sub":"...","roles":["Monitor"],"nombre":"Diego Fuentes",
+   "email":"monitor@syncpass.cl","typ":"access","exp":...}
+
+Dashboard:
+  GET http://192.168.100.191:8080/api/dashboard/resumen
+  Authorization: Bearer <accessToken>
+  HTTP 200
+
+Emulador:
+  emulator -avd Medium_Phone_API_37.0 -no-snapshot -no-boot-anim -no-audio
+           -no-window -gpu swiftshader_indirect -memory 1024 -cores 2
+  adb install -r app-debug.apk
+  adb shell pm clear cl.syncpass.app
+  adb shell am start -n cl.syncpass.app/.MainActivity
+  adb shell cmd connectivity airplane-mode disable
+  adb shell svc wifi enable
+
+Datos locales sembrados para la prueba (Room, DB v4):
+  events:      id=1  "Taller de prueba MVP", abierto, allowWalkIn=1
+  participants:id=1  eventId=1  code=PART001  "Participante Uno"
+  Codigo QR:   SYNCPASS:V1:1:PART001
+
+Idempotencia (adb run-as + sqlite local):
+  UPDATE attendance SET sincronizado=0;
+  (se reinyecta syncpass.db y se relanza la app)
+
+=====================================================================
+PASO 3 - LOGIN Y ROL JWT
+=====================================================================
+- Login en la app con monitor@syncpass.cl / Monitor.2026.
+- El payload del accessToken emitido por la API trae roles ["Monitor"].
+- La app entra a la interfaz de Monitor: Home "CONTROL DE ASISTENCIA",
+  pestanas Inicio / Acreditar / Ajustes y "Hola" del monitor.
+- Captura: mvp-monitor.png
+
+=====================================================================
+PASO 4 - ACREDITACION Y PENDIENTE
+=====================================================================
+- Evento "Taller de prueba MVP" abierto.
+- Codigo ingresado: SYNCPASS:V1:1:PART001
+- Pantalla de acreditacion: 1/1 acreditados.
+- Ajustes:
+    Pendientes por enviar: 1
+    Servidor: http://192.168.100.191:8080/
+    MODO_DEMO activo
+- Capturas: mvp-acreditacion.png, mvp-ajustes-pendiente.png
+
+=====================================================================
+PASO 5 - PRIMER SYNC
+=====================================================================
+Dashboard antes (mvp-before.json):
+  HTTP 200
+  {"data":{"usuarios":3,"eventos":2,"asistencias":0,"encuestas":0},...}
+  timestamp 2026-11-17T00:00:39Z
+
+Accion: Ajustes -> Sincronizar.
+Resultado en la app: pendientes 0.
+Dashboard despues (mvp-after1.json):
+  HTTP 200
+  {"data":{"usuarios":3,"eventos":2,"asistencias":1,"encuestas":0},...}
+  timestamp 2026-11-17T00:04:28Z
+
+Filas: asistencias 0 -> 1.
+Captura: mvp-sync1.png
+
+=====================================================================
+PASO 6 - IDEMPOTENCIA (RECUPERADA)
+=====================================================================
+Incidente: la API y el emulador cayeron por OOM antes de completar el
+reenvio. Se reiniciaron API y emulador (ver resumen). La fila local seguia
+pendiente (sincronizado=0).
+
+API recuperada, dashboard antes del reenvio (mvp-restart-before.json):
+  HTTP 200
+  {"data":{"usuarios":3,"eventos":2,"asistencias":0,"encuestas":0},...}
+  timestamp 2026-11-17T00:13:51Z
+
+Sync de recuperacion (mvp-after-recuperada.json):
+  {"data":{"usuarios":3,"eventos":2,"asistencias":1,"encuestas":0},...}
+  timestamp 2026-11-17T00:15:40Z
+
+Reenvio del mismo lote:
+  UPDATE attendance SET sincronizado=0; (misma fila id=1, eventId=1,
+  participantId=1)
+  Dashboard antes del reenvio (mvp-idempotencia-antes.json):
+    {"...","asistencias":1,...} timestamp 2026-11-17T00:16:01Z
+  Accion: Sincronizar. La app queda en pendientes 0.
+  Dashboard despues (mvp-idempotencia-despues.json):
+    {"...","asistencias":1,...} timestamp 2026-11-17T00:16:10Z
+
+Filas: asistencias 1 -> 1. El reenvio no duplico.
+Capturas: mvp-sync-recuperada.png, mvp-idempotencia.png
+
+=====================================================================
+PASO 7 - CERRAR/REABRIR: SESION Y SYNC SIN LOGIN
+=====================================================================
+- Se dejo la misma fila en sincronizado=0.
+- force-stop + am start. La app abre directo en la interfaz de Monitor,
+  sin pantalla de login.
+- Ajustes muestra "Pendientes por enviar: 1".
+- Se pulsa Sincronizar sin volver a iniciar sesion.
+- Resultado: pendientes 0; dashboard asistencias=1
+  (timestamp 2026-11-17T00:16:45Z).
+
+Esto confirma que el token persistido en SharedPreferences se usa en el
+request de sync tras reiniciar el proceso.
+Capturas: mvp-reinicio-sesion.png, mvp-reinicio-sync.png
+
+=====================================================================
+PASO 8 - RESPALDO DEMO CON API DETENIDA
+=====================================================================
+- API detenida: Stop-Process del java de la API.
+  Verificacion: GET /api/health -> sin conexion (API_DOWN_OK).
+- Logout en Ajustes (icono cerrar sesion).
+- Login con monitor / 1234.
+- Resultado: entra a la interfaz de Monitor (Home, Acreditar, Ajustes;
+  1 evento, 1 inscrito, 1 acreditado).
+- Esto confirma el fallback LocalAuth cuando el backend no responde y
+  MODO_DEMO=true.
+- Captura: mvp-demo-local.png
+
+=====================================================================
+ARCHIVOS DE EVIDENCIA
+=====================================================================
+mvp-before.json
+mvp-after1.json
+mvp-restart-before.json
+mvp-after-recuperada.json
+mvp-idempotencia-antes.json
+mvp-idempotencia-despues.json
+mvp-login.png
+mvp-monitor.png
+mvp-acreditacion.png
+mvp-ajustes-pendiente.png
+mvp-sync1.png
+mvp-sync-recuperada.png
+mvp-idempotencia.png
+mvp-reinicio-sesion.png
+mvp-reinicio-sync.png
+mvp-demo-local.png
+
+=====================================================================
+CIERRE
+=====================================================================
+EMULADOR=cerrado
+API=detenida
+GRADLE=sin daemons

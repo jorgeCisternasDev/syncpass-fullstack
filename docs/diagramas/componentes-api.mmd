@@ -1,0 +1,40 @@
+C4Component
+  title SyncPass API - Componentes
+
+  Container_Boundary(api, "SyncPass API") {
+    Component(security, "SecurityConfig", "Spring Security", "JWT Bearer, roles y CORS")
+    Component(authController, "AuthController", "Spring MVC", "Login, refresh, logout y registro")
+    Component(userController, "UsuarioController", "Spring MVC", "Listado y ciclo de vida de usuarios")
+    Component(projectController, "ProyectoController", "Spring MVC", "CRUD de proyectos y eventos por proyecto")
+    Component(eventController, "EventoController", "Spring MVC", "CRUD de eventos")
+    Component(syncController, "SyncController", "Spring MVC", "Recepción idempotente del lote offline")
+    Component(dashboardController, "DashboardController", "Spring MVC", "Totales del panel")
+    Component(authService, "AuthService", "Spring Service", "Login local, Cognito y emisión de tokens")
+    Component(projectService, "ProyectoService", "Spring Service", "Reglas y validación de proyectos")
+    Component(eventService, "EventoService", "Spring Service", "Reglas y validación de eventos")
+    Component(repositories, "Repositories", "Spring Data JPA", "Usuarios, proyectos, eventos, asistencias y encuestas")
+    Component(handler, "GlobalExceptionHandler", "Spring MVC", "Errores de negocio y validación")
+  }
+
+  SystemDb_Ext(db, "Base de datos", "H2 / PostgreSQL")
+  System_Ext(cognito, "AWS Cognito", "User pool opcional")
+
+  Rel(authController, authService, "Delegado")
+  Rel(authService, cognito, "Autentica", "OIDC")
+  Rel(authService, repositories, "Valida y guarda usuarios")
+  Rel(userController, authService, "Delegado")
+  Rel(projectController, projectService, "Delegado")
+  Rel(projectController, eventService, "Lista eventos")
+  Rel(eventController, eventService, "Delegado")
+  Rel(syncController, repositories, "Persiste lote")
+  Rel(dashboardController, repositories, "Cuenta totales")
+  Rel(projectService, repositories, "Lee y escribe")
+  Rel(eventService, repositories, "Lee y escribe")
+  Rel(security, authController, "Protege")
+  Rel(security, userController, "Protege")
+  Rel(security, projectController, "Protege")
+  Rel(security, eventController, "Protege")
+  Rel(security, syncController, "Protege")
+  Rel(repositories, db, "JPA")
+
+  UpdateLayoutConfig($c4ShapeInRow="4", $c4BoundaryInRow="1")

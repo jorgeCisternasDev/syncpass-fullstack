@@ -1,0 +1,22 @@
+# Gradle (backend)
+syncpass_api/.gradle/
+syncpass_api/build/
+
+# Node (web)
+syncpass_web/node_modules/
+syncpass_web/dist/
+
+# Entorno y secretos
+.env
+.env.local
+.env.production
+**/local.properties
+keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pem
+
+# Sistema
+Thumbs.db
+.DS_Store

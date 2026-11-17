@@ -1,0 +1,10 @@
+﻿API SMOKE - port 18080
+START_PID=9944
+HEALTH_URL=http://localhost:18080/api/health
+HEALTH_HTTP=200
+HEALTH_BODY={"data":{"service":"syncpass-api","status":"UP","authMode":"local","timestamp":"2026-11-16T22:42:47.515933200Z"},"message":"Servicio operativo","success":true,"timestamp":"2026-11-16T22:42:47.516925600Z"}
+LOGIN_HTTP=200
+ACCESS_TOKEN_PRESENT=True
+ACCESS_TOKEN_LENGTH=329
+GET_PROYECTOS_HTTP=200
+GET_PROYECTOS_BODY=[{"proyectoId":1,"titulo":"Proyecto Verde","descripcion":"Talleres de huerto comunitario y cuidado del entorno.","areaTematica":"Medio ambiente","unidadVecinal":"Villa Los Aromos","fechaInicio":1788220800000,"fechaTermino":1798761599000,"estado":"EN_CURSO"},{"proyectoId":2,"titulo":"Proyecto Conecta","descripcion":"Alfabetizacion digital para personas mayores.","areaTematica":"Inclusion digital","unidadVecinal":"Poblacion San Juan","fechaInicio":1788220800000,"fechaTermino":1798761599000,"estado":"EN_CURSO"}]
