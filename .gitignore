@@ -5,6 +5,7 @@ syncpass_api/build/
 # Node (web)
 syncpass_web/node_modules/
 syncpass_web/dist/
+syncpass_web/coverage/
 
 # Entorno y secretos
 .env
