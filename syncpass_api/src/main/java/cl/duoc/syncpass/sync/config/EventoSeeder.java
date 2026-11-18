@@ -9,12 +9,16 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.Instant;
 
 @Component
 @Order(2)
 @RequiredArgsConstructor
 public class EventoSeeder implements CommandLineRunner {
+
+    /** S-2: si un evento no declara su fin, la ventana es de dos horas. */
+    private static final long DOS_HORAS_MS = Duration.ofHours(2).toMillis();
 
     private final EventoRepository eventoRepository;
     private final ProyectoRepository proyectoRepository;
@@ -45,10 +49,12 @@ public class EventoSeeder implements CommandLineRunner {
                 .estado("EN_CURSO")
                 .build());
 
+        long huertoHora = Instant.parse("2026-10-18T13:00:00Z").toEpochMilli();
         eventoRepository.save(Evento.builder()
                 .proyecto(verde)
                 .nombre("Taller de huerto comunitario")
-                .fechaHora(Instant.parse("2026-10-18T13:00:00Z").toEpochMilli())
+                .fechaHora(huertoHora)
+                .fechaTermino(huertoHora + DOS_HORAS_MS)
                 .cuposMax(30)
                 .recinto("Sede vecinal Villa Los Aromos")
                 .latitud(-33.0472)
@@ -56,10 +62,12 @@ public class EventoSeeder implements CommandLineRunner {
                 .radioMetros(120)
                 .build());
 
+        long alfabetizacionHora = Instant.parse("2026-10-25T13:00:00Z").toEpochMilli();
         eventoRepository.save(Evento.builder()
                 .proyecto(conecta)
                 .nombre("Jornada de alfabetizacion digital")
-                .fechaHora(Instant.parse("2026-10-25T13:00:00Z").toEpochMilli())
+                .fechaHora(alfabetizacionHora)
+                .fechaTermino(alfabetizacionHora + DOS_HORAS_MS)
                 .cuposMax(25)
                 .recinto("Biblioteca publica")
                 .latitud(-33.0501)

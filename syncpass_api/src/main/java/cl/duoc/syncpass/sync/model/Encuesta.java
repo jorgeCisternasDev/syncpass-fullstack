@@ -13,6 +13,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Encuesta de satisfacción: una por evento y clave opaca de usuario.
+ * El comentario admite 600 caracteres, igual que la app (contrato v2, sección 5.1).
+ */
 @Entity
 @Table(name = "encuestas", uniqueConstraints = @UniqueConstraint(columnNames = { "evento_id", "usuario_id" }))
 @Getter
@@ -32,13 +36,17 @@ public class Encuesta {
     @Column(name = "usuario_id", nullable = false)
     private Long usuarioId;
 
+    /** Atribución opcional (D-06 opción C). */
+    @Column(name = "usuario_uuid", length = 64)
+    private String usuarioUuid;
+
     @Column(nullable = false)
     private Integer satisfaccion;
 
     @Column(nullable = false)
     private Integer utilidad;
 
-    @Column(length = 500)
+    @Column(length = 600)
     private String comentario;
 
     @Column(name = "fecha_ms", nullable = false)

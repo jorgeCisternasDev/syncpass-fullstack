@@ -5,6 +5,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -26,8 +27,11 @@ public record EventoDto(
         @Positive(message = "debe ser un timestamp positivo")
         Long fechaHora,
 
+        /** Opcional (H3-DISENO 3.2). Si falta, la app usa {@code fechaHora + 2 h} (S-2). */
+        Long fechaTermino,
+
         @NotNull(message = "es obligatorio")
-        @Positive(message = "debe ser mayor que cero")
+        @PositiveOrZero(message = "no puede ser negativo; 0 significa sin límite")
         Integer cuposMax,
 
         @NotBlank(message = "es obligatorio")
