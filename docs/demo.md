@@ -6,12 +6,13 @@ Duración objetivo: **10 a 12 minutos**. Todo con datos ficticios. La app y la A
 
 | Qué | Cómo |
 | --- | --- |
-| API arriba | `cd syncpass_api; .\gradlew.bat bootRun` → `http://localhost:8080/api/health` responde 200 |
+| API arriba | Ejecutar `demo\reset-demo.ps1` de la entrega (deja una ventana "API" abierta) o `cd syncpass_api; .\gradlew.bat bootRun` |
 | Panel web | `cd syncpass_web; npm run dev` → `http://localhost:5173` |
-| App instalada | `adb install -r entregas\SyncPass-1.1.0-h3-release-firmado.apk` |
-| Red de la app | Misma WiFi que el PC; `API_BASE_URL` del APK es `http://192.168.1.84:8080/`. Si la IP cambió, recompilar o usar build debug con `adb reverse` |
-| Evento listo | Un evento de hoy con ventana abierta y cupos disponibles |
-| Datos limpios | Borrar datos de la app o usar un evento nuevo para que los contadores partan en cero |
+| App principal | `adb install -r entregas\SyncPass-1.1.0-h3-release-firmado.apk` (IP LAN, `MODO_DEMO=true`) |
+| App plan B | `entregas\SyncPass-1.1.0-debug-localhost.apk` + `adb reverse tcp:8080 tcp:8080` |
+| Red de la app | Release: misma WiFi que el PC, `http://192.168.1.84:8080/`. Plan B: `localhost` por `adb reverse` |
+| Evento listo | Evento fijo **Demo Defensa** (ver abajo); el reset refresca su ventana |
+| Datos limpios | `demo\reset-demo.ps1` restaura la app y la base a 0 asistencias y 3 participantes |
 
 Credenciales ficticias:
 
@@ -20,6 +21,30 @@ Credenciales ficticias:
 | `coordinador@syncpass.cl` | `Coord.2026` | Coordinador |
 | `monitor@syncpass.cl` | `Monitor.2026` | Monitor |
 | `asistente@syncpass.cl` | `Asist.2026` | Asistente |
+
+### Kit fijo de defensa
+
+| Campo | Valor |
+| --- | --- |
+| Proyecto | **5** — Demo Defensa |
+| Evento | **3** — Demo Defensa |
+| Ventana | El reset la deja en `ahora - 30 min` a `ahora + 6 h` |
+| Cupos | 10 |
+| Recinto | Sala de defensa |
+| Participantes | `Ana Demo` / `DEMO-001` / **SPGY6PW8** · `Bruno Demo` / `DEMO-002` / **SPPPTLFK** · `Carla Demo` / `DEMO-003` / **SPTJL9EA** |
+
+Reset para repetir la defensa igual:
+
+```powershell
+cd <carpeta de la entrega>\demo
+.\reset-demo.ps1
+```
+
+El script detiene la API, restaura la base desde `demo\snapshots\backend-syncpass.mv.db`, vuelve a levantar la API en una ventana propia, refresca la ventana del evento y restaura los datos de la app desde `demo\snapshots\app-data.tar`. Deja **0 acreditados, 3 participantes y los mismos códigos**. Cerrar la ventana "API" detiene el servidor.
+
+Nota: la base es H2 en archivo (`demo\syncpass.mv.db`), no en memoria; por eso el evento y los usuarios sobreviven a un reinicio.
+
+Los códigos fijos viven en el snapshot de la app del **emulador preparado** (build debug). Si la demo se hace con la release en un teléfono, hay que inscribir a Ana, Bruno y Carla en la app y usar los códigos que muestre esa instalación; el evento y los cupos son los mismos.
 
 ## 2. Guion
 
@@ -48,18 +73,18 @@ Mostrar el panel en `/login` y la app en la pantalla de acceso.
 
 ### 3:00–5:00 — Acreditación manual y QR
 
-1. En la app, entrar a **Acreditar** y elegir el evento.
-2. Agregar un participante desde el detalle del evento (nombre ficticio). La app genera un código `SP...` y su QR.
-3. Escribir ese código en **Código o documento** y tocar **Acreditar**.
-4. Mostrar el contador `1/1 acreditados` y **Últimas acreditaciones**.
+1. En la app, entrar a **Acreditar**: el evento **Demo Defensa** ya está seleccionado.
+2. Escribir el código de **Ana Demo** (`SPGY6PW8`) en **Código o documento** y tocar **Acreditar**.
+3. Mostrar el contador `1/3 acreditados` y **Últimas acreditaciones**.
+4. (Opcional) Abrir el detalle del evento y mostrar el QR de un participante.
 5. Tocar **Abrir cámara** para mostrar la pantalla de escaneo.
 
-> "La cámara física no se verificó en esta entrega; el escaneo existe y el camino manual es el respaldado. Si la cámara falla en la sala, se sigue con el código."
+> "La pantalla de escaneo abre con permiso concedido, y con el permiso denegado la app ofrece la alternativa manual. Lo que no se pudo verificar sin un teléfono es la lectura de un QR físico. Si la cámara falla en la sala, se sigue con el código."
 
 ### 5:00–6:30 — Encuesta
 
-1. Acreditar un segundo participante (o usar el asistente del seed).
-2. Entrar como `asistente@syncpass.cl` en la app.
+1. Acreditar a **Bruno Demo** con su código (`SPPPTLFK`).
+2. Ir a **Encuestas** → **Hacer una encuesta** y elegir a Bruno (figura PRESENTE).
 3. Responder la encuesta de satisfacción (5 y 5, comentario ficticio).
 4. Mostrar la confirmación.
 
@@ -68,7 +93,7 @@ Mostrar el panel en `/login` y la app en la pantalla de acceso.
 ### 6:30–8:00 — Offline y sincronización
 
 1. Activar modo avión.
-2. Acreditar a otro participante.
+2. Acreditar a **Carla Demo** (`SPTJL9EA`).
 3. Abrir **Ajustes**: **Pendientes por enviar** sube.
 4. Cerrar y reabrir la app: la sesión y el pendiente siguen ahí.
 5. Quitar modo avión.
@@ -124,16 +149,18 @@ Get-FileHash entregas\SyncPass-1.1.0-h3-release-firmado.apk -Algorithm SHA256
 
 | Bloque de la demo | Documento | Evidencia real |
 | --- | --- | --- |
+| Kit fijo y reset | Este documento, §1 | `demo\snapshots\backend-syncpass.mv.db` y `demo\snapshots\app-data.tar`; reset probado 1 → 0 acreditados |
 | Login y guard por rol | [roles-permisos.md](roles-permisos.md), [casos-de-uso.md](casos-de-uso.md) CU-01/CU-14 | `evidencia\h3-emulador\05-home-3-eventos.png`; tests `Login.test.tsx`, `Nav.test.tsx`, `Usuarios.test.tsx` |
 | Catálogo en la app | [arquitectura.md](arquitectura.md) §5, CU-05 | `evidencia\h3-emulador\05-db-local.txt`, `backend-proyectos-final.json`, `CatalogoRepositoryTest` |
 | Acreditación manual | [arquitectura.md](arquitectura.md) §6, CU-07 | `evidencia\h3-emulador\03-evento-2de2.png`, `03-ui-evento.xml` |
-| QR / cámara | CU-07 y [pruebas-cobertura.md](pruebas-cobertura.md) §5 | Pantalla de escaneo en la app; **cámara física no verificada**, camino manual como respaldo |
+| QR / cámara | CU-07 y [pruebas-cobertura.md](pruebas-cobertura.md) §5 | `evidencia\defensa\escaner-qr.png` (escáner abierto) y `permiso-camara-denegado.xml`; **lectura de QR físico no verificada** |
 | Encuesta con presencia | CU-11 y [requisitos.md](requisitos.md) RF-13 | `evidencia\h3-emulador\06-ui-encuesta-formulario.xml`, `06-ui-encuesta-gracias.xml`; `LoteServiceTest` |
 | Offline y pendientes | [arquitectura.md](arquitectura.md) §6 | `evidencia\h3-emulador\04-ajustes-pendientes.png`, `02-persistencia-asistente.png` |
 | Sync e idempotencia | CU-08, RF-11 y RNF-11 | `evidencia\h3-emulador\backend-dashboard-03-final.json`, `backend-dashboard-02-reenvio.json`, `logcat-final.txt` (worker `SUCCESS`) |
 | Rechazo y descarte | CU-12 y RF-18 | `evidencia\h3-emulador\07-ajustes-rechazo.png`, `08-ajustes-descartado.png` |
 | 403 real | [roles-permisos.md](roles-permisos.md) §2 | Bloque de consola de este guion; tests de seguridad del backend |
 | APK firmado | `FIRMA-APK.md` de la entrega | SHA-256 `0538D515…`; esquema v2; huella `a4cd1b83…` |
+| Plan B de red | Este documento, §1 y §4 | `evidencia\defensa\ajustes-debug-localhost.png` (servidor `localhost`, `MODO_DEMO` desactivado, pendientes 0) |
 
 Las capturas y JSON viven en la carpeta de evidencia de la entrega (fuera del repositorio). Los tests y comandos sí están en este repositorio y se pueden repetir.
 
@@ -141,16 +168,16 @@ Las capturas y JSON viven en la carpeta de evidencia de la entrega (fuera del re
 
 | Falla | Plan B |
 | --- | --- |
-| No hay red o cambió la IP | Mostrar la app con datos ya descargados; la demo offline funciona igual. Recompilar con la IP correcta solo si hay tiempo |
+| No hay red o cambió la IP | Plan B: instalar `entregas\SyncPass-1.1.0-debug-localhost.apk`, `adb reverse tcp:8080 tcp:8080` y usar `localhost`. Sin adb, mostrar la app con datos ya descargados |
 | El emulador no arranca | Usar capturas de `evidencia\h3-emulador` y el APK instalado en un teléfono |
 | La API no arranca | Mostrar `npm test`, `gradlew test` y los reportes de cobertura; el panel web queda sin datos |
-| La cámara no enfoca | Acreditar por código; decir explícitamente que la cámara no está verificada |
+| La cámara no enfoca | Acreditar por código. El permiso denegado y la pantalla de escaneo están probados; la lectura de un QR físico no |
 | Se llenó el cupo del evento | Usar otro evento o subir `cuposMax` desde el panel |
 
 ## 5. Qué no prometer
 
 - No hay despliegue en la nube.
 - PostgreSQL y Cognito reales no se probaron.
-- La cámara/QR físico no se verificó.
+- La lectura de un QR físico no se verificó; sí el permiso denegado y la pantalla de escaneo.
 - Las pruebas instrumentadas de Android no se ejecutaron.
 - La cobertura de la app no es una métrica válida por el sandbox de Robolectric.
