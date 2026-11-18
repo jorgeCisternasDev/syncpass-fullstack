@@ -236,6 +236,25 @@ class ParticipanteContractTest {
         assertTrue(usuarioRepository.findById(P3).isEmpty());
     }
 
+    @Test
+    @DisplayName("P-03b correo del usuario sembrado asistente@syncpass.cl: 409 EMAIL_EN_USO")
+    void p03bEmailDeUsuarioSembrado() throws Exception {
+        usuarioRepository.save(Usuario.builder()
+                .id(P1)
+                .email("asistente@syncpass.cl")
+                .nombre("Asistente Ficticio")
+                .roles(Set.of("Asistente"))
+                .activo(true)
+                .build());
+
+        Respuesta r = post("/api/participantes", token("Monitor"),
+                participante(P2, NOMBRE, "asistente@syncpass.cl"));
+
+        assertEquals(409, r.status());
+        assertEquals("EMAIL_EN_USO", codigo(r));
+        assertFalse(usuarioRepository.existsById(P2));
+    }
+
     // ------------------------------------------------------------------ P-04
 
     @Test
