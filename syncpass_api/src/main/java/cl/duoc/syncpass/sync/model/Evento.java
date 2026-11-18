@@ -38,6 +38,13 @@ public class Evento {
     @Column(name = "fecha_hora", nullable = false)
     private Long fechaHora;
 
+    /**
+     * Fin de la ventana de acreditación (H3-DISENO 3.2). Opcional: si falta, la app calcula
+     * {@code fechaHora + 2 h} (supuesto S-2) y el servidor no inventa una duración.
+     */
+    @Column(name = "fecha_termino")
+    private Long fechaTermino;
+
     @Column(name = "cupos_max", nullable = false)
     private Integer cuposMax;
 

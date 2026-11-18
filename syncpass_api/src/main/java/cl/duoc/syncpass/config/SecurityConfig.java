@@ -70,6 +70,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**", "/api/health").permitAll()
                 .requestMatchers("/api/sync/**").hasAnyRole("Coordinador", "Monitor", "Asistente")
+                .requestMatchers(HttpMethod.POST, "/api/participantes")
+                        .hasAnyRole("Coordinador", "Monitor", "Asistente")
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))

@@ -33,4 +33,14 @@ public class ApiResponse<T> {
                 .timestamp(Instant.now())
                 .build();
     }
+
+    /** Error con detalle, como el {@code data.errores} que exige el rechazo de lote. */
+    public static <T> ApiResponse<T> of(boolean success, T data, String message) {
+        return ApiResponse.<T>builder()
+                .success(success)
+                .data(data)
+                .message(message)
+                .timestamp(Instant.now())
+                .build();
+    }
 }

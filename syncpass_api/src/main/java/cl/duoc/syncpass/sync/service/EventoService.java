@@ -39,6 +39,7 @@ public class EventoService {
                 .proyecto(proyecto)
                 .nombre(dto.nombre().trim())
                 .fechaHora(dto.fechaHora())
+                .fechaTermino(dto.fechaTermino())
                 .cuposMax(dto.cuposMax())
                 .recinto(dto.recinto().trim())
                 .latitud(dto.latitud())
@@ -58,6 +59,7 @@ public class EventoService {
         evento.setProyecto(proyecto);
         evento.setNombre(dto.nombre().trim());
         evento.setFechaHora(dto.fechaHora());
+        evento.setFechaTermino(dto.fechaTermino());
         evento.setCuposMax(dto.cuposMax());
         evento.setRecinto(dto.recinto().trim());
         evento.setLatitud(dto.latitud());
@@ -97,6 +99,7 @@ public class EventoService {
                 evento.getProyecto().getId(),
                 evento.getNombre(),
                 evento.getFechaHora(),
+                evento.getFechaTermino(),
                 evento.getCuposMax(),
                 evento.getRecinto(),
                 evento.getLatitud(),
