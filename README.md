@@ -21,6 +21,7 @@ Backend Spring Boot, panel web React y documentación del caso SyncPass. La app 
 | [docs/requisitos.md](docs/requisitos.md) | 22 requisitos funcionales, 13 no funcionales, reglas de negocio y alcance |
 | [docs/roles-permisos.md](docs/roles-permisos.md) | Matriz de permisos por endpoint, ruta web y pantalla de la app |
 | [docs/vistas-navegacion.md](docs/vistas-navegacion.md) | Rutas web y de la app, flujos de acreditación y encuesta, estados de UI |
+| [docs/demo.md](docs/demo.md) | Guion de demo de 10–12 minutos y matriz caso → evidencia |
 | [docs/pruebas-cobertura.md](docs/pruebas-cobertura.md) | Comandos, resultados y porcentajes reales de cobertura, con límites declarados |
 
 La documentación Markdown es la fuente vigente. La ERS en Word queda como apoyo y no se edita desde este repositorio.
