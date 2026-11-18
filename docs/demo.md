@@ -46,6 +46,61 @@ Nota: la base es H2 en archivo (`demo\syncpass.mv.db`), no en memoria; por eso e
 
 Los códigos fijos viven en el snapshot de la app del **emulador preparado** (build debug). Si la demo se hace con la release en un teléfono, hay que inscribir a Ana, Bruno y Carla en la app y usar los códigos que muestre esa instalación; el evento y los cupos son los mismos.
 
+### Setup A — emulador preparado
+
+```powershell
+# 1. Encender el AVD si no esta abierto
+& "$env:LOCALAPPDATA\Android\Sdk\emulator\emulator.exe" -avd Medium_Phone_API_37.0
+
+# 2. Restaurar todo (API, evento y app) desde la carpeta de la entrega
+cd "C:\Users\jorge\Documents\empresas\Taller de Codigo\demo"
+.\reset-demo.ps1
+```
+
+El script deja la API en una ventana propia, corre `adb reverse tcp:8080 tcp:8080` (el build del emulador usa `localhost`) y arranca la app con 3 participantes y 0 acreditados. Cerrar la ventana "API" detiene el servidor.
+
+### Setup B — release firmado en teléfono
+
+```powershell
+adb devices                      # debe aparecer el telefono autorizado
+adb uninstall cl.syncpass.app    # solo si viene de otro APK (firma distinta)
+adb install -r "entregas\SyncPass-1.1.0-h3-release-firmado.apk"
+
+# Verificar que el telefono llega a la API por la WiFi
+adb shell am start -a android.intent.action.VIEW -d http://192.168.1.84:8080/api/health
+```
+
+En el navegador del teléfono debe verse `{"status":"UP"}`. Luego, en la app:
+
+1. Entrar como `monitor@syncpass.cl`.
+2. Abrir **Demo Defensa** → **Agregar** e inscribir a Ana, Bruno y Carla. Anotar los códigos que genere esa instalación (cambian respecto del emulador).
+3. Acreditar con el código y probar la cámara.
+
+Si la red falla, plan B en el mismo teléfono:
+
+```powershell
+adb uninstall cl.syncpass.app
+adb install -r "entregas\SyncPass-1.1.0-debug-localhost.apk"
+adb reverse tcp:8080 tcp:8080
+```
+
+Cambiar de release a debug (o al revés) exige desinstalar: las firmas son distintas y Android no deja instalar encima.
+
+### Probar cámara/QR en teléfono
+
+1. Abrir el detalle de un participante en la app y mostrar su QR.
+2. Llevar ese QR a la pantalla del PC:
+   ```powershell
+   adb exec-out screencap -p > qr-participante.png
+   ```
+3. Mostrar `qr-participante.png` en el PC y apuntar la cámara del teléfono a la pantalla.
+4. Verificar la acreditación en la app y, si hace falta, en `adb logcat`.
+5. Permiso denegado:
+   ```powershell
+   adb shell pm revoke cl.syncpass.app android.permission.CAMERA
+   ```
+   Al tocar **Abrir cámara** debe aparecer el aviso con la alternativa **Escribir código**.
+
 ## 2. Guion
 
 ### 0:00–1:00 — Qué es SyncPass
